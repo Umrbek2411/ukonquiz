@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UKON Quiz — Bilimingizni Sinab Ko'ring</title>
+    <meta name="description" content="UKONquiz — matematika va dasturlash fanlaridan vaqtli online testlar.">
+    <meta name="keywords" content="UKONquiz, UKON quiz, ukon test, online test, matematika, dasturlash">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="UKON Quiz — Bilimingizni Sinab Ko'ring">
+    <meta property="og:description" content="UKONquiz platformasida testlarni yeching!">
+    <meta property="og:type" content="website">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "UKON Quiz",
+        "alternateName": "UKONquiz",
+        "description": "Matematika va dasturlash fanlaridan vaqtli online test platformasi"
+    }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="fullbg"></div>
+<canvas id="circuit-canvas"></canvas>
+
+<div class="notif" id="notif">
+    <span class="notif-icon" id="notif-icon">✅</span>
+    <div>
+        <div class="notif-title" id="notif-title"></div>
+        <div class="notif-msg"   id="notif-msg"></div>
+    </div>
+</div>
+
+<!-- LANDING -->
+<section class="landing active" id="landing">
+    <div class="brand">
+        <div class="brand-name">UKON</div>
+        <div class="brand-sub">⚡ Quiz Platform</div>
+    </div>
+    <p class="landing-desc">
+        Matematika va Dasturlash fanlaridan<br>
+        bilimingizni <strong style="color:#ffd700">vaqtli testlar</strong> orqali sinab ko'ring
+    </p>
+    <div class="landing-btns">
+        <button class="btn btn-register" onclick="showStage('stage-reg')">
+            🚀 Ro'yxatdan o'tish
+        </button>
+        <button class="btn btn-login" onclick="showStage('stage-login')">
+            🔑 Kirish
+        </button>
+    </div>
+</section>
+
+<!-- RO'YXATDAN O'TISH -->
+<div class="stage" id="stage-reg">
+  <div class="glass-card">
+    <div class="card-logo">
+        <div class="logo-icon">U</div>
+        <div class="logo-text">UKON Quiz</div>
+    </div>
+    <h1>Ro'yxatdan o'tish</h1>
+    <p class="subtitle">Platformadan foydalanish uchun ma'lumotlaringizni kiriting.</p>
+    <div class="error-box" id="reg-err"></div>
+    <div class="form-group">
+        <label>Ism va Familiya</label>
+        <input type="text" id="reg-name" placeholder="Abdullayev Jasur">
+    </div>
+    <div class="form-group">
+        <label>Telefon raqami</label>
+        <input type="tel" id="reg-phone" placeholder="+998 90 123 45 67">
+    </div>
+    <div class="form-group">
+        <label>Gmail</label>
+        <input type="email" id="reg-email" placeholder="jasur@gmail.com">
+    </div>
+    <button class="btn btn-primary" id="reg-btn" onclick="doRegister()">
+        Kodni yuborish →
+    </button>
+    <div class="divider">allaqachon hisobingiz bormi?</div>
+    <button class="btn btn-ghost" onclick="showStage('stage-login')">Kirish</button>
+    <button class="btn btn-ghost" onclick="backLanding()">← Orqaga</button>
+  </div>
+</div>
+
+<!-- KIRISH -->
+<div class="stage" id="stage-login">
+  <div class="glass-card">
+    <div class="card-logo">
+        <div class="logo-icon">U</div>
+        <div class="logo-text">UKON Quiz</div>
+    </div>
+    <div id="saved-section" style="display:none">
+        <h1>Xush kelibsiz! 👋</h1>
+        <p class="subtitle">Hisobingiz saqlanib qolgan.</p>
+        <div class="saved-badge">
+            <div class="avatar" id="saved-avatar">U</div>
+            <div class="saved-info">
+                <div class="name"  id="saved-name"></div>
+                <div class="email" id="saved-email-txt"></div>
+            </div>
+            <button class="change-btn" onclick="clearSaved()">O'zgartirish</button>
+        </div>
+        <button class="btn btn-primary" onclick="continueSession()">▶ Davom etish</button>
+        <div class="divider">yoki</div>
+    </div>
+    <div id="login-form-section">
+        <h1>Kirish</h1>
+        <p class="subtitle">Gmailingizni kiriting, tasdiqlash kodi yuboramiz.</p>
+        <div class="error-box" id="login-err"></div>
+        <div class="form-group">
+            <label>Gmail</label>
+            <input type="email" id="login-email" placeholder="jasur@gmail.com">
+        </div>
+        <button class="btn btn-primary" id="login-btn" onclick="doLogin()">
+            Kodni yuborish →
+        </button>
+        <div class="divider">hisobingiz yo'qmi?</div>
+        <button class="btn btn-ghost" onclick="showStage('stage-reg')">Ro'yxatdan o'tish</button>
+    </div>
+    <button class="btn btn-ghost" onclick="backLanding()">← Orqaga</button>
+  </div>
+</div>
+
+<!-- OTP -->
+<div class="stage" id="stage-verify">
+  <div class="glass-card">
+    <div class="card-logo">
+        <div class="logo-icon">U</div>
+        <div class="logo-text">UKON Quiz</div>
+    </div>
+    <h1>📬 Emailni tasdiqlang</h1>
+    <p class="subtitle">6 xonali tasdiqlash kodi Gmailingizga yuborildi.</p>
+    <div class="info-box" id="verify-email-show">📧 ...</div>
+    <div class="otp-wrap">
+        <input class="otp-box" type="text" maxlength="1" id="o1" inputmode="numeric">
+        <input class="otp-box" type="text" maxlength="1" id="o2" inputmode="numeric">
+        <input class="otp-box" type="text" maxlength="1" id="o3" inputmode="numeric">
+        <input class="otp-box" type="text" maxlength="1" id="o4" inputmode="numeric">
+        <input class="otp-box" type="text" maxlength="1" id="o5" inputmode="numeric">
+        <input class="otp-box" type="text" maxlength="1" id="o6" inputmode="numeric">
+    </div>
+    <div class="error-box" id="otp-err"></div>
+    <button class="btn btn-primary" id="verify-btn" onclick="doVerify()">
+        Tasdiqlash ✓
+    </button>
+    <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--muted)">
+        Kod kelmadimi?
+        <a href="#" id="resend-link" onclick="doResend(event)"
+           style="color:var(--orange);text-decoration:none;margin-left:4px">
+            Qayta yuborish
+        </a>
+        <span id="resend-timer" style="display:none"></span>
+    </div>
+  </div>
+</div>
+
+<!-- FAN TANLASH -->
+<div class="stage" id="stage-subject">
+  <div class="glass-card">
+    <div class="card-logo">
+        <div class="logo-icon">U</div>
+        <div class="logo-text">UKON Quiz</div>
+    </div>
+    <h1>Fan tanlang 📚</h1>
+    <p class="subtitle" id="greet-text">Qaysi fanda bilimingizni sinab ko'rasiz?</p>
+    <div class="subjects">
+        <div class="subject-card math" onclick="pickSubject('math',this)">
+            <span class="subject-icon">🔢</span>
+            <div class="subject-title">Matematika</div>
+            <div class="subject-desc">Algebra, geometriya, analiz</div>
+            <span class="subject-count">10 ta savol</span>
+        </div>
+        <div class="subject-card code" onclick="pickSubject('code',this)">
+            <span class="subject-icon">💻</span>
+            <div class="subject-title">Dasturlash</div>
+            <div class="subject-desc">HTML, CSS, JS, PHP, C#</div>
+            <span class="subject-count">10 ta savol</span>
+        </div>
+    </div>
+    <button class="btn btn-primary" id="start-btn"
+            style="opacity:0.45;pointer-events:none"
+            onclick="startQuiz()">
+        Testni boshlash →
+    </button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="quiz-stage" id="stage-quiz">
+    <header class="quiz-header">
+        <div class="quiz-logo">UKON</div>
+        <div class="subject-badge" id="quiz-badge">Matematika</div>
+        <div class="q-count" id="q-count">1 / 10</div>
+        <div class="timer-wrap">
+            <svg viewBox="0 0 52 52">
+                <circle class="timer-bg"   cx="26" cy="26" r="22"></circle>
+                <circle class="timer-ring" cx="26" cy="26" r="22"
+                    stroke-dasharray="138.2"
+                    stroke-dashoffset="0"
+                    id="timer-ring">
+                </circle>
+            </svg>
+            <div class="timer-num" id="timer-num">30</div>
+        </div>
+    </header>
+    <div class="progress-bar">
+        <div class="progress-fill" id="prog-fill" style="width:0%"></div>
+    </div>
+    <div class="quiz-body">
+        <div class="question-wrap">
+            <div class="q-label" id="q-label">SAVOL 1</div>
+            <div class="q-text"  id="q-text">...</div>
+            <div class="options" id="options-grid"></div>
+        </div>
+    </div>
+    <footer class="quiz-footer">
+        <button class="btn-next" onclick="nextQ()" id="next-btn">
+            Keyingi savol →
+        </button>
+    </footer>
+</div>
+
+<!-- NATIJA -->
+<div class="stage" id="stage-results">
+  <div class="glass-card results-card">
+    <div class="card-logo" style="justify-content:center">
+        <div class="logo-icon">U</div>
+        <div class="logo-text">UKON Quiz</div>
+    </div>
+    <span class="medal" id="r-medal">🏆</span>
+    <h1 id="r-title">Ajoyib!</h1>
+    <p class="subtitle" id="r-sub">Test yakunlandi.</p>
+    <div class="score-ring">
+        <svg viewBox="0 0 130 130">
+            <circle class="ring-bg"   cx="65" cy="65" r="56"></circle>
+            <circle class="ring-fill" cx="65" cy="65" r="56"
+                stroke-dasharray="351.86"
+                stroke-dashoffset="351.86"
+                id="ring-fill">
+            </circle>
+        </svg>
+        <div class="score-num">
+            <span class="score-pct" id="r-pct">0%</span>
+            <span class="score-lbl">natija</span>
+        </div>
+    </div>
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-val c-green" id="r-correct">0</div>
+            <div class="stat-lbl">To'g'ri</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val c-red" id="r-wrong">0</div>
+            <div class="stat-lbl">Noto'g'ri</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val c-blue" id="r-time">0s</div>
+            <div class="stat-lbl">Vaqt</div>
+        </div>
+    </div>
+    <button class="btn btn-primary" onclick="goSubjects()" style="margin-bottom:10px">
+        🔄 Boshqa fan tanlash
+    </button>
+    <button class="btn btn-ghost" onclick="retryQuiz()">↺ Qayta urinish</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
