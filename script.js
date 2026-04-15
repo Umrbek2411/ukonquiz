@@ -338,7 +338,7 @@ async function showResults() {
     },100);
     let cur=0;
     const iv=setInterval(()=>{cur=Math.min(cur+2,pct);document.getElementById('r-pct').textContent=cur+'%';if(cur>=pct)clearInterval(iv);},18);
-    if(S.token){await post('save_result.php',{token:S.token,subject:S.subject,score:S.score,total,time_spent:sec});}
+    if(S.token){await post('save_results.php',{token:S.token,subject:S.subject,score:S.score,total,time_spent:sec});}
 }
 
 function goSubjects() {
