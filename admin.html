@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UKON Quiz — Admin Panel</title>
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        :root {
+            --red:#e63000; --orange:#ff6b00; --gold:#ffd700;
+            --dark:#0a0505; --glass:rgba(10,5,5,0.85);
+            --border:rgba(255,107,0,0.25); --text:#f5f5f5; --muted:#999;
+        }
+        body { font-family:'Segoe UI',Arial,sans-serif; background:#0f0808; color:var(--text); min-height:100vh; }
+
+        /* LOGIN */
+        .login-wrap {
+            min-height:100vh; display:flex; align-items:center; justify-content:center;
+            background: radial-gradient(ellipse at center, #1a0800 0%, #0a0505 100%);
+        }
+        .login-card {
+            background:var(--glass); border:1px solid var(--border);
+            border-radius:24px; padding:48px 44px; width:100%; max-width:420px;
+            backdrop-filter:blur(20px);
+            box-shadow:0 32px 80px rgba(0,0,0,0.6);
+        }
+        .admin-logo { text-align:center; margin-bottom:32px; }
+        .admin-logo-icon {
+            width:64px; height:64px; border-radius:18px; margin:0 auto 12px;
+            background:linear-gradient(135deg,var(--red),var(--orange));
+            display:flex; align-items:center; justify-content:center;
+            font-size:28px; font-weight:900; color:white;
+            box-shadow:0 8px 24px rgba(230,48,0,0.4);
+        }
+        .admin-logo h1 { font-size:22px; font-weight:800; }
+        .admin-logo p { font-size:13px; color:var(--muted); margin-top:4px; }
+
+        label { display:block; font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.45); margin-bottom:7px; }
+        input[type="text"], input[type="password"] {
+            width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,107,0,0.2);
+            border-radius:12px; padding:13px 16px; color:var(--text); font-size:15px; outline:none; transition:all 0.2s;
+        }
+        input:focus { border-color:var(--orange); background:rgba(255,107,0,0.06); box-shadow:0 0 0 3px rgba(255,107,0,0.12); }
+        .form-group { margin-bottom:14px; }
+        .btn-primary {
+            width:100%; padding:14px; border:none; border-radius:12px; cursor:pointer;
+            background:linear-gradient(135deg,var(--red),var(--orange)); color:white;
+            font-size:15px; font-weight:700; margin-top:8px;
+            box-shadow:0 6px 20px rgba(230,48,0,0.35); transition:all 0.2s;
+        }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(230,48,0,0.5); }
+        .error-box {
+            display:none; background:rgba(230,48,0,0.1); border:1px solid rgba(230,48,0,0.3);
+            border-radius:10px; padding:11px 14px; font-size:13px; color:#ff7755; margin-bottom:14px;
+        }
+
+        /* DASHBOARD */
+        .dashboard { display:none; min-height:100vh; }
+
+        /* SIDEBAR */
+        .sidebar {
+            position:fixed; left:0; top:0; bottom:0; width:260px;
+            background:rgba(10,5,5,0.95); border-right:1px solid var(--border);
+            padding:24px 0; z-index:100;
+        }
+        .sidebar-logo {
+            padding:0 24px 24px; border-bottom:1px solid rgba(255,107,0,0.1);
+            margin-bottom:16px;
+        }
+        .sidebar-logo span {
+            font-size:22px; font-weight:900;
+            background:linear-gradient(135deg,var(--orange),var(--gold));
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+        }
+        .sidebar-logo p { font-size:11px; color:var(--muted); margin-top:2px; }
+
+        .nav-item {
+            display:flex; align-items:center; gap:12px;
+            padding:12px 24px; cursor:pointer; transition:all 0.2s;
+            font-size:14px; font-weight:500; color:var(--muted);
+            border-left:3px solid transparent;
+        }
+        .nav-item:hover { color:var(--text); background:rgba(255,107,0,0.06); }
+        .nav-item.active { color:var(--orange); background:rgba(255,107,0,0.08); border-left-color:var(--orange); }
+        .nav-icon { font-size:18px; width:24px; text-align:center; }
+
+        .sidebar-bottom {
+            position:absolute; bottom:0; left:0; right:0;
+            padding:16px 24px; border-top:1px solid rgba(255,107,0,0.1);
+        }
+        .admin-info { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+        .admin-avatar {
+            width:36px; height:36px; border-radius:10px;
+            background:linear-gradient(135deg,var(--red),var(--orange));
+            display:flex; align-items:center; justify-content:center;
+            font-weight:700; font-size:14px;
+        }
+        .admin-name { font-size:13px; font-weight:600; }
+        .admin-role { font-size:11px; color:var(--muted); }
+        .btn-logout {
+            width:100%; padding:9px; border:1px solid rgba(255,107,0,0.3);
+            border-radius:10px; background:transparent; color:var(--muted);
+            font-size:13px; cursor:pointer; transition:all 0.2s;
+        }
+        .btn-logout:hover { border-color:var(--red); color:#ff7755; }
+
+        /* MAIN */
+        .main { margin-left:260px; padding:32px; }
+
+        .page { display:none; }
+        .page.active { display:block; }
+
+        .page-header { margin-bottom:28px; }
+        .page-header h2 { font-size:24px; font-weight:800; margin-bottom:4px; }
+        .page-header p { font-size:14px; color:var(--muted); }
+
+        /* CARDS */
+        .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:28px; }
+        .stat-card {
+            background:rgba(255,255,255,0.03); border:1px solid var(--border);
+            border-radius:16px; padding:20px 24px;
+        }
+        .stat-card-val { font-size:32px; font-weight:900; color:var(--orange); }
+        .stat-card-lbl { font-size:13px; color:var(--muted); margin-top:4px; }
+
+        /* TABLE */
+        .table-wrap {
+            background:rgba(255,255,255,0.02); border:1px solid var(--border);
+            border-radius:16px; overflow:hidden;
+        }
+        .table-header {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:18px 24px; border-bottom:1px solid rgba(255,107,0,0.1);
+        }
+        .table-header h3 { font-size:16px; font-weight:700; }
+
+        table { width:100%; border-collapse:collapse; }
+        th {
+            text-align:left; padding:12px 24px; font-size:11px; font-weight:600;
+            letter-spacing:0.08em; text-transform:uppercase; color:var(--muted);
+            border-bottom:1px solid rgba(255,107,0,0.1);
+        }
+        td { padding:14px 24px; font-size:14px; border-bottom:1px solid rgba(255,255,255,0.04); }
+        tr:last-child td { border-bottom:none; }
+        tr:hover td { background:rgba(255,107,0,0.03); }
+
+        /* BUTTONS */
+        .btn-add {
+            padding:10px 20px; border:none; border-radius:10px; cursor:pointer;
+            background:linear-gradient(135deg,var(--red),var(--orange));
+            color:white; font-size:13px; font-weight:700;
+            box-shadow:0 4px 14px rgba(230,48,0,0.3); transition:all 0.2s;
+        }
+        .btn-add:hover { transform:translateY(-1px); }
+        .btn-edit {
+            padding:6px 14px; border:1px solid rgba(255,107,0,0.3); border-radius:8px;
+            background:transparent; color:var(--orange); font-size:12px; cursor:pointer; transition:all 0.2s;
+        }
+        .btn-edit:hover { background:rgba(255,107,0,0.1); }
+        .btn-del {
+            padding:6px 14px; border:1px solid rgba(239,68,68,0.3); border-radius:8px;
+            background:transparent; color:#ef4444; font-size:12px; cursor:pointer; transition:all 0.2s;
+            margin-left:6px;
+        }
+        .btn-del:hover { background:rgba(239,68,68,0.1); }
+
+        /* FILTER */
+        .filter-bar {
+            display:flex; gap:10px; align-items:center;
+            padding:14px 24px; border-bottom:1px solid rgba(255,107,0,0.1);
+        }
+        select {
+            background:rgba(255,255,255,0.06); border:1px solid rgba(255,107,0,0.2);
+            border-radius:10px; padding:8px 14px; color:var(--text); font-size:13px; outline:none;
+        }
+        select:focus { border-color:var(--orange); }
+
+        /* BADGE */
+        .badge {
+            display:inline-block; padding:3px 10px; border-radius:20px;
+            font-size:11px; font-weight:600;
+            background:rgba(255,107,0,0.12); color:var(--orange);
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75);
+            z-index:1000; align-items:center; justify-content:center;
+        }
+        .modal-overlay.show { display:flex; }
+        .modal {
+            background:#150a0a; border:1px solid var(--border); border-radius:20px;
+            padding:36px; width:100%; max-width:520px;
+            box-shadow:0 32px 80px rgba(0,0,0,0.8);
+            animation:modalPop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes modalPop { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:scale(1)} }
+        .modal h3 { font-size:18px; font-weight:800; margin-bottom:20px; }
+        .modal-footer { display:flex; gap:10px; margin-top:20px; }
+        .btn-cancel {
+            flex:1; padding:12px; border:1px solid rgba(255,107,0,0.3);
+            border-radius:10px; background:transparent; color:var(--muted);
+            font-size:14px; cursor:pointer; transition:all 0.2s;
+        }
+        .btn-cancel:hover { border-color:var(--orange); color:var(--orange); }
+        .btn-save {
+            flex:2; padding:12px; border:none; border-radius:10px; cursor:pointer;
+            background:linear-gradient(135deg,var(--red),var(--orange));
+            color:white; font-size:14px; font-weight:700; transition:all 0.2s;
+        }
+        .btn-save:hover { transform:translateY(-1px); }
+
+        textarea {
+            width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,107,0,0.2);
+            border-radius:12px; padding:13px 16px; color:var(--text); font-size:14px;
+            outline:none; resize:vertical; min-height:80px; transition:all 0.2s;
+        }
+        textarea:focus { border-color:var(--orange); }
+
+        .correct-opts { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+        .correct-opt {
+            display:flex; align-items:center; gap:8px;
+            background:rgba(255,255,255,0.04); border:1px solid rgba(255,107,0,0.15);
+            border-radius:10px; padding:10px 12px; cursor:pointer; transition:all 0.2s;
+        }
+        .correct-opt.sel { border-color:var(--orange); background:rgba(255,107,0,0.1); }
+        .correct-opt input[type="radio"] { accent-color:var(--orange); }
+
+        .notif {
+            position:fixed; top:22px; right:22px;
+            background:rgba(15,8,8,0.95); border:1px solid rgba(255,107,0,0.3);
+            border-radius:14px; padding:14px 18px;
+            display:flex; align-items:center; gap:12px;
+            box-shadow:0 16px 48px rgba(0,0,0,0.5); z-index:9999; max-width:330px;
+            transform:translateX(120%); transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .notif.show { transform:translateX(0); }
+        .notif-title { font-weight:700; font-size:13px; margin-bottom:2px; }
+        .notif-msg { font-size:12px; color:var(--muted); }
+    </style>
+</head>
+<body>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif">
+    <span id="notif-icon">✅</span>
+    <div>
+        <div class="notif-title" id="notif-title"></div>
+        <div class="notif-msg" id="notif-msg"></div>
+    </div>
+</div>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+    <div class="login-card">
+        <div class="admin-logo">
+            <div class="admin-logo-icon">A</div>
+            <h1>Admin Panel</h1>
+            <p>UKON Quiz boshqaruv tizimi</p>
+        </div>
+        <div class="error-box" id="login-err"></div>
+        <div class="form-group">
+            <label>Login</label>
+            <input type="text" id="admin-login" placeholder="admin">
+        </div>
+        <div class="form-group">
+            <label>Parol</label>
+            <input type="password" id="admin-pass" placeholder="••••••••">
+        </div>
+        <button class="btn-primary" onclick="doAdminLogin()">Kirish →</button>
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <span>UKON Quiz</span>
+            <p>Admin Panel</p>
+        </div>
+        <div class="nav-item active" onclick="showPage('page-subjects')">
+            <span class="nav-icon">📚</span> Fanlar
+        </div>
+        <div class="nav-item" onclick="showPage('page-results')">
+    <span class="nav-icon">📊</span> Natijalar
+</div>
+        <div class="nav-item" onclick="showPage('page-settings')">
+    <span class="nav-icon">⚙️</span> Sozlamalar
+</div>
+        <div class="nav-item" onclick="showPage('page-questions')">
+            <span class="nav-icon">❓</span> Savollar
+        </div>
+        <div class="sidebar-bottom">
+            <div class="admin-info">
+                <div class="admin-avatar" id="admin-avatar">A</div>
+                <div>
+                    <div class="admin-name" id="admin-name">Admin</div>
+                    <div class="admin-role">Administrator</div>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="doLogout()">🚪 Chiqish</button>
+        </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+
+        <!-- FANLAR -->
+        <div class="page active" id="page-subjects">
+            <div class="page-header">
+                <h2>📚 Fanlar</h2>
+                <p>Fanlarni qo'shing, tahrirlang yoki o'chiring</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-val" id="stat-subjects">0</div>
+                    <div class="stat-card-lbl">Jami fanlar</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-val" id="stat-questions">0</div>
+                    <div class="stat-card-lbl">Jami savollar</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-val" id="stat-avg">0</div>
+                    <div class="stat-card-lbl">O'rtacha savol/fan</div>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <div class="table-header">
+                    <h3>Fanlar ro'yxati</h3>
+                    <button class="btn-add" onclick="openSubjectModal()">+ Fan qo'shish</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Icon</th>
+                            <th>Nomi</th>
+                            <th>Tavsif</th>
+                            <th>Savollar</th>
+                            <th>Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subjects-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SAVOLLAR -->
+         <div class="page" id="page-questions">
+    <div class="page-header">
+        <h2>❓ Savollar</h2>
+        <p>Savollarni qo'shing, tahrirlang yoki o'chiring</p>
+    </div>
+    <div class="table-wrap">
+        <div class="table-header">
+            <h3>Savollar ro'yxati</h3>
+            <button class="btn-add" onclick="openQuestionModal()">+ Savol qo'shish</button>
+        </div>
+        <div class="filter-bar">
+            <label style="margin:0;white-space:nowrap">Fan:</label>
+            <select id="filter-subject" onchange="loadQuestions()">
+                <option value="">Barcha fanlar</option>
+            </select>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fan</th>
+                    <th>Savol</th>
+                    <th>To'g'ri javob</th>
+                    <th>Amallar</th>
+                </tr>
+            </thead>
+            <tbody id="questions-tbody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- NATIJALAR -->
+<div class="page" id="page-results">
+    <div class="page-header">
+        <h2>📊 Natijalar</h2>
+        <p>Foydalanuvchilar test natijalari</p>
+    </div>
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat-card">
+            <div class="stat-card-val" id="stat-users">0</div>
+            <div class="stat-card-lbl">Foydalanuvchilar</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-val" id="stat-total-results">0</div>
+            <div class="stat-card-lbl">Jami testlar</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-val" id="stat-avg-score">0%</div>
+            <div class="stat-card-lbl">O'rtacha natija</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-val" id="stat-today">0</div>
+            <div class="stat-card-lbl">Bugun</div>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <div class="table-header">
+            <h3>So'nggi natijalar</h3>
+            <button class="btn-add" onclick="loadResults()">🔄 Yangilash</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Foydalanuvchi</th>
+                    <th>Fan</th>
+                    <th>Natija</th>
+                    <th>Foiz</th>
+                    <th>Vaqt</th>
+                    <th>Sana</th>
+                </tr>
+            </thead>
+            <tbody id="results-tbody"></tbody>
+        </table>
+    </div>
+</div>
+
+        <!-- SOZLAMALAR -->
+<div class="page" id="page-settings">
+    <div class="page-header">
+        <h2>⚙️ Sozlamalar</h2>
+        <p>Test vaqti va savollar sonini boshqaring</p>
+    </div>
+    <div class="table-wrap" style="max-width:560px">
+        <div class="table-header">
+            <h3>Test sozlamalari</h3>
+        </div>
+        <div style="padding:28px">
+            <div class="form-group" style="margin-bottom:20px">
+                <label>Test vaqti (sekundda)</label>
+                <input type="number" id="set-time" min="30" max="3600" placeholder="300"
+                    style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,107,0,0.2);
+                    border-radius:12px;padding:13px 16px;color:#f5f5f5;font-size:15px;outline:none;">
+                <p style="font-size:12px;color:#999;margin-top:6px">
+                    💡 300 = 5 daqiqa | 600 = 10 daqiqa | 900 = 15 daqiqa
+                </p>
+            </div>
+            <div class="form-group" style="margin-bottom:24px">
+                <label>Savollar soni (har bir testda)</label>
+                <input type="number" id="set-qcount" min="1" max="50" placeholder="10"
+                    style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,107,0,0.2);
+                    border-radius:12px;padding:13px 16px;color:#f5f5f5;font-size:15px;outline:none;">
+                <p style="font-size:12px;color:#999;margin-top:6px">
+                    💡 Fan bazasida kamida shuncha savol bo'lishi kerak
+                </p>
+            </div>
+            <div id="settings-msg" style="display:none;padding:11px 14px;border-radius:10px;
+                font-size:13px;margin-bottom:16px;"></div>
+            <button class="btn-add" onclick="saveSettings()" style="width:100%;padding:14px;font-size:15px">
+                💾 Saqlash
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- FAN MODAL -->
+<div class="modal-overlay" id="subject-modal">
+    <div class="modal">
+        <h3 id="subject-modal-title">Fan qo'shish</h3>
+        <input type="hidden" id="subject-id">
+        <div class="form-group">
+            <label>Fan nomi</label>
+            <input type="text" id="subject-name" placeholder="Matematika">
+        </div>
+        <div class="form-group">
+            <label>Icon (emoji)</label>
+            <input type="text" id="subject-icon" placeholder="📚" value="📚">
+        </div>
+        <div class="form-group">
+            <label>Tavsif</label>
+            <input type="text" id="subject-desc" placeholder="Fan haqida qisqacha">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('subject-modal')">Bekor qilish</button>
+            <button class="btn-save" onclick="saveSubject()">Saqlash ✓</button>
+        </div>
+    </div>
+</div>
+
+<!-- SAVOL MODAL -->
+<div class="modal-overlay" id="question-modal">
+    <div class="modal">
+        <h3 id="question-modal-title">Savol qo'shish</h3>
+        <input type="hidden" id="question-id">
+        <div class="form-group">
+            <label>Fan</label>
+            <select id="question-subject" style="width:100%"></select>
+        </div>
+        <div class="form-group">
+            <label>Savol matni</label>
+            <textarea id="question-text" placeholder="Savolni kiriting..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>A variant</label>
+            <input type="text" id="q-opt-a" placeholder="A variant">
+        </div>
+        <div class="form-group">
+            <label>B variant</label>
+            <input type="text" id="q-opt-b" placeholder="B variant">
+        </div>
+        <div class="form-group">
+            <label>C variant</label>
+            <input type="text" id="q-opt-c" placeholder="C variant">
+        </div>
+        <div class="form-group">
+            <label>D variant</label>
+            <input type="text" id="q-opt-d" placeholder="D variant">
+        </div>
+        <div class="form-group">
+            <label>To'g'ri javob</label>
+            <div class="correct-opts">
+                <div class="correct-opt sel" onclick="selCorrect(0,this)">
+                    <input type="radio" name="correct" checked> A variant
+                </div>
+                <div class="correct-opt" onclick="selCorrect(1,this)">
+                    <input type="radio" name="correct"> B variant
+                </div>
+                <div class="correct-opt" onclick="selCorrect(2,this)">
+                    <input type="radio" name="correct"> C variant
+                </div>
+                <div class="correct-opt" onclick="selCorrect(3,this)">
+                    <input type="radio" name="correct"> D variant
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('question-modal')">Bekor qilish</button>
+            <button class="btn-save" onclick="saveQuestion()">Saqlash ✓</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const API = 'http://localhost/ukonquiz/api';
+let adminData = null;
+let correctAns = 0;
+let subjects = [];
+
+// SOZLAMALAR
+async function loadSettings() {
+    const res = await fetch(`${API}/admin_settings.php`).then(r=>r.json()).catch(()=>null);
+    if (!res?.success) return;
+    document.getElementById('set-time').value   = res.settings.quiz_time || 300;
+    document.getElementById('set-qcount').value = res.settings.questions_count || 10;
+}
+
+async function saveSettings() {
+    const quiz_time       = parseInt(document.getElementById('set-time').value);
+    const questions_count = parseInt(document.getElementById('set-qcount').value);
+    const msg = document.getElementById('settings-msg');
+
+    const res = await post('admin_settings.php', {action:'save', quiz_time, questions_count});
+    msg.style.display = 'block';
+    if (res?.success) {
+        msg.style.background = 'rgba(34,197,94,0.1)';
+        msg.style.border = '1px solid rgba(34,197,94,0.3)';
+        msg.style.color = '#22c55e';
+        msg.textContent = '✅ ' + res.message;
+        notify('✅','Saqlandi!', res.message);
+    } else {
+        msg.style.background = 'rgba(230,48,0,0.1)';
+        msg.style.border = '1px solid rgba(230,48,0,0.3)';
+        msg.style.color = '#ff7755';
+        msg.textContent = '⚠️ ' + (res?.message || 'Xato');
+    }
+}
+
+// NATIJALAR
+async function loadResults() {
+    const res = await fetch(`${API}/admin_results.php?action=list`).then(r=>r.json()).catch(()=>null);
+    const stats = await fetch(`${API}/admin_results.php?action=stats`).then(r=>r.json()).catch(()=>null);
+
+    if (stats?.success) {
+        document.getElementById('stat-users').textContent        = stats.total_users;
+        document.getElementById('stat-total-results').textContent = stats.total_results;
+        document.getElementById('stat-avg-score').textContent    = stats.avg_score + '%';
+        document.getElementById('stat-today').textContent        = stats.today;
+    }
+
+    if (!res?.success) return;
+
+    const tbody = document.getElementById('results-tbody');
+    if (!res.results?.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">
+            Hali natijalar yo'q
+        </td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = res.results.map((r,i) => {
+        const pct = r.percent;
+        const color = pct>=70?'#22c55e':pct>=50?'#ffd700':'#ef4444';
+        const date = new Date(r.taken_at).toLocaleString('uz-UZ');
+        const min = Math.floor(r.time_spent/60);
+        const sec = r.time_spent%60;
+        const time = min>0?`${min}m ${sec}s`:`${sec}s`;
+        return `<tr>
+            <td><span class="badge">${i+1}</span></td>
+            <td>
+                <div style="font-weight:600">${r.full_name}</div>
+                <div style="font-size:12px;color:var(--muted)">${r.email}</div>
+            </td>
+            <td>${r.subject_icon||'📚'} ${r.subject_name}</td>
+            <td>${r.score}/${r.total}</td>
+            <td><span style="color:${color};font-weight:700">${pct}%</span></td>
+            <td>${time}</td>
+            <td style="color:var(--muted);font-size:13px">${date}</td>
+        </tr>`;
+    }).join('');
+}
+
+// SOZLAMALAR
+// NATIJALAR
+async function loadResults() {
+    const res = await fetch(`${API}/admin_results.php?action=list`).then(r=>r.json()).catch(()=>null);
+    const stats = await fetch(`${API}/admin_results.php?action=stats`).then(r=>r.json()).catch(()=>null);
+
+    if (stats?.success) {
+        document.getElementById('stat-users').textContent        = stats.total_users;
+        document.getElementById('stat-total-results').textContent = stats.total_results;
+        document.getElementById('stat-avg-score').textContent    = stats.avg_score + '%';
+        document.getElementById('stat-today').textContent        = stats.today;
+    }
+
+    if (!res?.success) return;
+
+    const tbody = document.getElementById('results-tbody');
+    if (!res.results?.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">
+            Hali natijalar yo'q
+        </td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = res.results.map((r,i) => {
+        const pct = r.percent;
+        const color = pct>=70?'#22c55e':pct>=50?'#ffd700':'#ef4444';
+        const date = new Date(r.taken_at).toLocaleString('uz-UZ');
+        const min = Math.floor(r.time_spent/60);
+        const sec = r.time_spent%60;
+        const time = min>0?`${min}m ${sec}s`:`${sec}s`;
+        return `<tr>
+            <td><span class="badge">${i+1}</span></td>
+            <td>
+                <div style="font-weight:600">${r.full_name}</div>
+                <div style="font-size:12px;color:var(--muted)">${r.email}</div>
+            </td>
+            <td>${r.subject_icon||'📚'} ${r.subject_name}</td>
+            <td>${r.score}/${r.total}</td>
+            <td><span style="color:${color};font-weight:700">${pct}%</span></td>
+            <td>${time}</td>
+            <td style="color:var(--muted);font-size:13px">${date}</td>
+        </tr>`;
+    }).join('');
+}
+
+async function loadSettings() {
+    const res = await fetch(`${API}/admin_settings.php`).then(r=>r.json()).catch(()=>null);
+    if (!res?.success) return;
+    document.getElementById('set-time').value   = res.settings.quiz_time || 300;
+    document.getElementById('set-qcount').value = res.settings.questions_count || 10;
+}
+
+async function saveSettings() {
+    const quiz_time       = parseInt(document.getElementById('set-time').value);
+    const questions_count = parseInt(document.getElementById('set-qcount').value);
+    const msg = document.getElementById('settings-msg');
+
+    const res = await post('admin_settings.php', {action:'save', quiz_time, questions_count});
+    msg.style.display = 'block';
+    if (res?.success) {
+        msg.style.background = 'rgba(34,197,94,0.1)';
+        msg.style.border = '1px solid rgba(34,197,94,0.3)';
+        msg.style.color = '#22c55e';
+        msg.textContent = '✅ ' + res.message;
+        notify('✅','Saqlandi!', res.message);
+    } else {
+        msg.style.background = 'rgba(230,48,0,0.1)';
+        msg.style.border = '1px solid rgba(230,48,0,0.3)';
+        msg.style.color = '#ff7755';
+        msg.textContent = '⚠️ ' + (res?.message || 'Xato');
+    }
+}
+
+// LOGIN
+async function doAdminLogin() {
+    const username = document.getElementById('admin-login').value.trim();
+    const password = document.getElementById('admin-pass').value.trim();
+    const err = document.getElementById('login-err');
+    err.style.display = 'none';
+
+    const res = await post('admin_login.php', {username, password});
+    if (!res || !res.success) {
+        err.style.display = 'block';
+        err.textContent = '⚠️ ' + (res?.message || 'Xato');
+        return;
+    }
+    adminData = res.admin;
+    document.getElementById('login-wrap').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('admin-name').textContent = adminData.username;
+    document.getElementById('admin-avatar').textContent = adminData.username[0].toUpperCase();
+    loadSubjects();
+    loadSettings();
+    loadQuestions();
+}
+
+function doLogout() {
+    adminData = null;
+    document.getElementById('login-wrap').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+}
+
+// NAVIGATION
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+
+    if (id === 'page-subjects') loadSubjects();
+    if (id === 'page-questions') loadQuestions();
+    if (id === 'page-settings') loadSettings();
+}
+
+// SUBJECTS
+async function loadSubjects() {
+    const res = await fetch(`${API}/admin_subjects.php?action=list`).then(r=>r.json());
+    if (!res.success) return;
+    subjects = res.subjects;
+
+    // Stats
+    const total = subjects.length;
+    const totalQ = subjects.reduce((s,x)=>s+parseInt(x.question_count),0);
+    document.getElementById('stat-subjects').textContent = total;
+    document.getElementById('stat-questions').textContent = totalQ;
+    document.getElementById('stat-avg').textContent = total ? Math.round(totalQ/total) : 0;
+
+    // Table
+    document.getElementById('subjects-tbody').innerHTML = subjects.map(s=>`
+        <tr>
+            <td><span class="badge">#${s.id}</span></td>
+            <td style="font-size:24px">${s.icon}</td>
+            <td><strong>${s.name}</strong></td>
+            <td style="color:var(--muted)">${s.description||'—'}</td>
+            <td><span class="badge">${s.question_count} ta</span></td>
+            <td>
+                <button class="btn-edit" onclick="editSubject(${s.id})">✏️ Tahrir</button>
+                <button class="btn-del" onclick="deleteSubject(${s.id},'${s.name}')">🗑️ O'chir</button>
+            </td>
+        </tr>`).join('');
+
+    // Filter select
+    const fs = document.getElementById('filter-subject');
+    const qs = document.getElementById('question-subject');
+    fs.innerHTML = '<option value="">Barcha fanlar</option>' +
+        subjects.map(s=>`<option value="${s.id}">${s.icon} ${s.name}</option>`).join('');
+    qs.innerHTML = subjects.map(s=>`<option value="${s.id}">${s.icon} ${s.name}</option>`).join('');
+}
+
+function openSubjectModal(data=null) {
+    document.getElementById('subject-modal-title').textContent = data ? 'Fanni tahrirlash' : "Fan qo'shish";
+    document.getElementById('subject-id').value = data?.id || '';
+    document.getElementById('subject-name').value = data?.name || '';
+    document.getElementById('subject-icon').value = data?.icon || '📚';
+    document.getElementById('subject-desc').value = data?.description || '';
+    document.getElementById('subject-modal').classList.add('show');
+}
+
+function editSubject(id) {
+    const s = subjects.find(x=>x.id==id);
+    if (s) openSubjectModal(s);
+}
+
+async function saveSubject() {
+    const id   = document.getElementById('subject-id').value;
+    const name = document.getElementById('subject-name').value.trim();
+    const icon = document.getElementById('subject-icon').value.trim();
+    const desc = document.getElementById('subject-desc').value.trim();
+
+    if (!name) { notify('❌','Xato',"Fan nomi majburiy"); return; }
+
+    const res = await post('admin_subjects.php', {
+        action: id ? 'edit' : 'add', id: id||undefined, name, icon, description: desc
+    });
+    if (!res?.success) { notify('❌','Xato', res?.message||'Xato'); return; }
+    notify('✅', 'Muvaffaqiyat!', res.message);
+    closeModal('subject-modal');
+    loadSubjects();
+}
+
+async function deleteSubject(id, name) {
+    if (!confirm(`"${name}" fanini o'chirasizmi? Barcha savollar ham o'chadi!`)) return;
+    const res = await post('admin_subjects.php', {action:'delete', id});
+    if (!res?.success) { notify('❌','Xato',res?.message||'Xato'); return; }
+    notify('✅','O\'chirildi!', res.message);
+    loadSubjects(); loadQuestions();
+}
+
+// QUESTIONS
+async function loadQuestions() {
+    const subjectId = document.getElementById('filter-subject')?.value || '';
+    const url = `${API}/admin_questions.php?action=list${subjectId?'&subject_id='+subjectId:''}`;
+    const res = await fetch(url).then(r=>r.json()).catch(()=>null);
+    if (!res?.success) return;
+
+    const opts = ['A','B','C','D'];
+    const tbody = document.getElementById('questions-tbody');
+
+    if (!res.questions?.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:32px">
+            Savollar yo'q. "Savol qo'shish" tugmasini bosing!
+        </td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = res.questions.map(q=>`
+        <tr>
+            <td><span class="badge">#${q.id}</span></td>
+            <td><span class="badge">${q.subject_name}</span></td>
+            <td style="max-width:300px">${q.question}</td>
+            <td style="color:var(--orange);font-weight:700">
+                ${opts[q.correct_ans]}: ${[q.opt_a,q.opt_b,q.opt_c,q.opt_d][q.correct_ans]}
+            </td>
+            <td>
+                <button class="btn-edit" onclick="editQuestion(${q.id})">✏️ Tahrir</button>
+                <button class="btn-del" onclick="deleteQuestion(${q.id})">🗑️ O'chir</button>
+            </td>
+        </tr>`).join('');
+}
+
+let editingQuestion = null;
+
+function openQuestionModal(data=null) {
+    editingQuestion = data;
+    correctAns = data?.correct_ans || 0;
+    document.getElementById('question-modal-title').textContent = data ? 'Savolni tahrirlash' : "Savol qo'shish";
+    document.getElementById('question-id').value = data?.id || '';
+    document.getElementById('question-text').value = data?.question || '';
+    document.getElementById('q-opt-a').value = data?.opt_a || '';
+    document.getElementById('q-opt-b').value = data?.opt_b || '';
+    document.getElementById('q-opt-c').value = data?.opt_c || '';
+    document.getElementById('q-opt-d').value = data?.opt_d || '';
+    if (data?.subject_id) document.getElementById('question-subject').value = data.subject_id;
+
+    document.querySelectorAll('.correct-opt').forEach((el,i)=>{
+        el.classList.toggle('sel', i===correctAns);
+        el.querySelector('input').checked = i===correctAns;
+    });
+    document.getElementById('question-modal').classList.add('show');
+}
+
+async function editQuestion(id) {
+    const url = `${API}/admin_questions.php?action=list`;
+    const res = await fetch(url).then(r=>r.json());
+    const q = res.questions?.find(x=>x.id==id);
+    if (q) openQuestionModal(q);
+}
+
+function selCorrect(idx, el) {
+    correctAns = idx;
+    document.querySelectorAll('.correct-opt').forEach(o=>o.classList.remove('sel'));
+    el.classList.add('sel');
+    el.querySelector('input').checked = true;
+}
+
+async function saveQuestion() {
+    const id         = document.getElementById('question-id').value;
+    const subject_id = document.getElementById('question-subject').value;
+    const question   = document.getElementById('question-text').value.trim();
+    const opt_a      = document.getElementById('q-opt-a').value.trim();
+    const opt_b      = document.getElementById('q-opt-b').value.trim();
+    const opt_c      = document.getElementById('q-opt-c').value.trim();
+    const opt_d      = document.getElementById('q-opt-d').value.trim();
+
+    if (!question||!opt_a||!opt_b||!opt_c||!opt_d) {
+        notify('❌','Xato','Barcha maydonlar majburiy'); return;
+    }
+
+    const res = await post('admin_questions.php', {
+        action: id ? 'edit' : 'add',
+        id: id||undefined, subject_id, question,
+        opt_a, opt_b, opt_c, opt_d, correct_ans: correctAns
+    });
+    if (!res?.success) { notify('❌','Xato',res?.message||'Xato'); return; }
+    notify('✅','Muvaffaqiyat!', res.message);
+    closeModal('question-modal');
+    loadQuestions(); loadSubjects();
+}
+
+async function deleteQuestion(id) {
+    if (!confirm("Bu savolni o'chirasizmi?")) return;
+    const res = await post('admin_questions.php', {action:'delete', id});
+    if (!res?.success) { notify('❌','Xato',res?.message||'Xato'); return; }
+    notify('✅',"O'chirildi!", res.message);
+    loadQuestions(); loadSubjects();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function notify(icon, title, msg) {
+    document.getElementById('notif-icon').textContent = icon;
+    document.getElementById('notif-title').textContent = title;
+    document.getElementById('notif-msg').textContent = msg;
+    const el = document.getElementById('notif');
+    el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'), 4000);
+}
+
+async function post(endpoint, data) {
+    try {
+        const r = await fetch(`${API}/${endpoint}`, {
+            method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+        });
+        return await r.json();
+    } catch(e) { console.error(e); return null; }
+}
+
+// Enter bilan login
+document.addEventListener('keydown', e=>{
+    if(e.key==='Enter') {
+        if(document.getElementById('login-wrap').style.display!=='none' &&
+           document.getElementById('login-wrap').style.display!=='') doAdminLogin();
+    }
+});
+</script>
+</body>
+</html>

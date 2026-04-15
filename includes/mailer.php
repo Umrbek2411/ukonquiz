@@ -55,3 +55,28 @@ function sendOTPEmail(string $toEmail, string $toName, string $otp): bool {
         return false;
     }
 }
+function sendResultEmail(string $toEmail, string $toName, string $body): bool {
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host       = 'smtp.gmail.com';
+        $mail->SMTPAuth   = true;
+        $mail->Username   = SMTP_USER;
+        $mail->Password   = SMTP_PASS;
+        $mail->SMTPSecure = 'tls';
+        $mail->Port       = 587;
+        $mail->CharSet    = 'UTF-8';
+
+        $mail->setFrom(MAIL_FROM, MAIL_NAME);
+        $mail->addAddress($toEmail, $toName);
+        $mail->Subject = 'UKON Quiz — Test natijangiz';
+        $mail->isHTML(true);
+        $mail->Body    = $body;
+        $mail->AltBody = "Salom {$toName}! Test natijangiz tayyor. Emailingizni oching.";
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        error_log('Result mailer xato: ' . $e->getMessage());
+        return false;
+    }
+}

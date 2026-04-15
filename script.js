@@ -1,39 +1,11 @@
 const API = 'http://localhost/ukonquiz/api';
 
-const QUESTIONS = {
-    math: [
-        { q: "2 + 2 × 2 = ?", opts: ["6","8","4","10"], ans: 0 },
-        { q: "√144 = ?", opts: ["11","12","13","14"], ans: 1 },
-        { q: "3³ (3 kub) = ?", opts: ["9","18","27","81"], ans: 2 },
-        { q: "To'g'ri to'rtburchak yuzini hisoblash formulasi?", opts: ["a + b","a × b","2(a+b)","a² + b²"], ans: 1 },
-        { q: "0.5 × 0.5 = ?", opts: ["0.25","0.50","0.10","0.75"], ans: 0 },
-        { q: "π (pi) ning taxminiy qiymati?", opts: ["3.14","2.72","1.41","3.41"], ans: 0 },
-        { q: "25% ning kasrli ifodasi?", opts: ["0.025","0.25","2.5","25"], ans: 1 },
-        { q: "x + 5 = 12 bo'lsa, x = ?", opts: ["5","6","7","8"], ans: 2 },
-        { q: "Uchburchak ichki burchaklari yig'indisi?", opts: ["90°","180°","270°","360°"], ans: 1 },
-        { q: "10! (10 faktorial) = ?", opts: ["100","1000","3628800","720"], ans: 2 }
-    ],
-    code: [
-        { q: "HTML so'zining to'liq nomi?", opts: ["HyperText Markup Language","HighText Machine Language","Hyperlink Text Markup","Home Tool Markup Language"], ans: 0 },
-        { q: "JavaScript qayerda ishlaydi?", opts: ["Faqat Chrome","Faqat Firefox","Barcha brauzerlarda","Faqat Edge"], ans: 2 },
-        { q: "CSS da rang berish to'g'ri usuli?", opts: ["font-color: red","color: red","text-color: red","foreground: red"], ans: 1 },
-        { q: "Python da izoh yozish?", opts: ["// izoh","/* izoh */","# izoh","-- izoh"], ans: 2 },
-        { q: "C# da o'zgaruvchi e'lon qilish?", opts: ["var x = 5","int x = 5","x = 5","Barchasi to'g'ri"], ans: 3 },
-        { q: "SQL da ma'lumot tanlash kalit so'zi?", opts: ["GET","FETCH","SELECT","FIND"], ans: 2 },
-        { q: "Git da yangi branch yaratish?", opts: ["git new branch","git branch -new","git checkout -b","git create branch"], ans: 2 },
-        { q: "PHP da echo va print farqi?", opts: ["Farqi yo'q","echo tezroq, print qiymat qaytaradi","print tezroq","echo qaytaradi, print qaytarmaydi"], ans: 1 },
-        { q: "HTML da rasm qo'shish tegi?", opts: ["<image>","<img>","<pic>","<photo>"], ans: 1 },
-        { q: "JavaScript da massiv uzunligi?", opts: ["array.size()","array.length","array.count()","array.len"], ans: 1 }
-    ]
-};
-
-// Umumiy vaqt: 10 savol × 30 sekund = 300 sekund
 const TOTAL_TIME = 300;
 
 let S = {
     user: null, token: null,
     pendEmail:'', pendName:'', pendPhone:'', pendPurpose:'register',
-    subject: null, questions:[], curQ:0, score:0,
+    subject: null, subjectId: null, questions:[], curQ:0, score:0,
     chosen:[], totalTimeLeft: TOTAL_TIME, timerID:null, startTime:null
 };
 
@@ -89,7 +61,26 @@ window.addEventListener('load', () => {
     const saved = localStorage.getItem('ukon_session');
     if (saved) { try { const p=JSON.parse(saved); S.user=p.user; S.token=p.token; } catch(e) {} }
     setupOTP();
+    loadSubjects();
 });
+
+// ===================== FANLARNI BAZADAN YUKLASH =====================
+async function loadSubjects() {
+    const res = await fetch(`${API}/admin_subjects.php?action=list`).then(r=>r.json()).catch(()=>null);
+    if (!res?.success) return;
+
+    const container = document.querySelector('.subjects');
+    if (!container) return;
+
+    container.innerHTML = res.subjects.map(s => `
+        <div class="subject-card" onclick="pickSubject('${s.id}', '${s.name}', '${s.icon}', this)">
+            <span class="subject-icon">${s.icon}</span>
+            <div class="subject-title">${s.name}</div>
+            <div class="subject-desc">${s.description || ''}</div>
+            <span class="subject-count">${s.question_count} ta savol</span>
+        </div>
+    `).join('');
+}
 
 function showStage(id) {
     document.getElementById('landing').classList.remove('active');
@@ -220,25 +211,48 @@ function goToSubject() {
     document.querySelectorAll('.stage,.quiz-stage,.landing').forEach(el=>el.classList.remove('active'));
     document.getElementById('stage-subject').classList.add('active');
     document.getElementById('greet-text').textContent=`Salom, ${S.user.full_name.split(' ')[0]}! Qaysi fanda bilimingizni sinab ko'rasiz?`;
+    loadSubjects();
 }
 
-function pickSubject(subj,el) {
+function pickSubject(id, name, icon, el) {
     document.querySelectorAll('.subject-card').forEach(c=>c.classList.remove('sel'));
-    el.classList.add('sel'); S.subject=subj;
+    el.classList.add('sel');
+    S.subject = name;
+    S.subjectId = id;
     const btn=document.getElementById('start-btn');
     btn.style.opacity='1'; btn.style.pointerEvents='auto';
     const badge=document.getElementById('quiz-badge');
-    badge.textContent=subj==='math'?'🔢 Matematika':'💻 Dasturlash';
-    badge.className='subject-badge '+subj;
+    badge.textContent = icon + ' ' + name;
+    badge.className = 'subject-badge';
 }
 
-function startQuiz() {
-    if (!S.subject) return;
-    S.questions=[...QUESTIONS[S.subject]].sort(()=>Math.random()-0.5);
+// ===================== QUIZ =====================
+async function startQuiz() {
+    if (!S.subjectId) return;
+
+    // Bazadan savollarni yuklash
+    const res = await fetch(`${API}/get_questions.php?subject=${S.subjectId}`).then(r=>r.json()).catch(()=>null);
+
+    if (!res?.success || !res.questions?.length) {
+        notify('❌','Xato',"Bu fanda savollar yo'q. Admin savol qo'shsin!");
+        return;
+    }
+
+    S.questions = res.questions.map(q => ({
+        q: q.question,
+        opts: [q.opt_a, q.opt_b, q.opt_c, q.opt_d],
+        ans: parseInt(q.correct_ans)
+    }));
+
     S.curQ=0; S.score=0; S.chosen=new Array(S.questions.length).fill(null);
     S.totalTimeLeft=TOTAL_TIME; S.startTime=Date.now();
+
     document.getElementById('stage-subject').classList.remove('active');
     document.getElementById('stage-quiz').classList.add('active');
+
+    const badge = document.getElementById('quiz-badge');
+    badge.textContent = S.subject;
+
     startGlobalTimer();
     loadQ();
 }
@@ -259,7 +273,6 @@ function loadQ() {
 }
 
 function chooseOpt(idx, el) {
-    // Javobni o'zgartirish mumkin!
     S.chosen[S.curQ]=idx;
     document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
     el.classList.add('selected');
@@ -269,10 +282,7 @@ function nextQ() {
     const q=S.questions[S.curQ];
     const opts=document.querySelectorAll('.option');
     opts[q.ans].classList.add('correct');
-    if (S.chosen[S.curQ]!==null && S.chosen[S.curQ]!==q.ans) {
-        opts[S.chosen[S.curQ]].classList.add('wrong');
-    }
-    if (S.chosen[S.curQ]===q.ans) S.score++;
+    if (S.chosen[S.curQ]!==null && S.chosen[S.curQ]!==q.ans) opts[S.chosen[S.curQ]].classList.add('wrong');
     setTimeout(()=>{
         S.curQ++;
         if(S.curQ<S.questions.length) loadQ();
@@ -280,7 +290,6 @@ function nextQ() {
     },800);
 }
 
-// UMUMIY TAYMER
 function startGlobalTimer() {
     clearInterval(S.timerID);
     updateTimer(S.totalTimeLeft);
@@ -305,12 +314,9 @@ function updateTimer(t) {
 
 async function showResults() {
     clearInterval(S.timerID);
-    // Barcha savollarni hisoblaymiz
-    S.questions.forEach((q,i)=>{ if(S.chosen[i]===q.ans) S.score++; });
-    // Ikki marta hisoblanmasligi uchun
-    const total=S.questions.length;
     S.score=0;
     S.questions.forEach((q,i)=>{ if(S.chosen[i]===q.ans) S.score++; });
+    const total=S.questions.length;
     const pct=Math.round(S.score/total*100);
     const sec=Math.round((Date.now()-S.startTime)/1000);
     document.getElementById('stage-quiz').classList.remove('active');
@@ -340,9 +346,10 @@ function goSubjects() {
     document.getElementById('stage-results').classList.remove('active');
     document.getElementById('stage-subject').classList.add('active');
     document.querySelectorAll('.subject-card').forEach(c=>c.classList.remove('sel'));
-    S.subject=null;
+    S.subject=null; S.subjectId=null;
     document.getElementById('start-btn').style.opacity='0.45';
     document.getElementById('start-btn').style.pointerEvents='none';
+    loadSubjects();
 }
 
 function retryQuiz() {
