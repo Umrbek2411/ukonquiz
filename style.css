@@ -59,6 +59,7 @@ body {
     background: linear-gradient(135deg, #ff6b00 0%, #ffd700 50%, #ff6b00 100%);
     background-size: 200%;
     -webkit-background-clip: text;
+    background-clip: text;  background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: shimmer 3s linear infinite;
     line-height: 1;
@@ -158,6 +159,7 @@ body {
     font-size: 20px; font-weight: 800;
     background: linear-gradient(135deg, var(--orange), var(--gold));
     -webkit-background-clip: text;
+    background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: 1px;
 }
@@ -389,6 +391,7 @@ input::placeholder { color: rgba(255,255,255,0.25); }
     font-size: 20px; font-weight: 900;
     background: linear-gradient(135deg, var(--orange), var(--gold));
     -webkit-background-clip: text;
+    background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 .subject-badge {
