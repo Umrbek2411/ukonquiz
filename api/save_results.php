@@ -96,10 +96,10 @@ $mail_body = "
     </p>
 </div>";
 
-sendResultEmail($user['email'], $user['full_name'], $mail_body);
+// sendResultEmail($user['email'], $user['full_name'], $mail_body);
 
 echo json_encode([
     'success' => true,
-    'message' => 'Natija saqlandi va emailga yuborildi',
+    'message' => 'Natija saqlandi',
     'percent' => $percent
 ]);
