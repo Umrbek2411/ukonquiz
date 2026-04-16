@@ -4,9 +4,11 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-define('SMTP_USER', 'karimovu960@gmail.com');      // o'z gmailingiz
-define('SMTP_PASS', 'yqdu qonp fuse sovi');    // Gmail App Password
-define('MAIL_FROM', 'karimovu960@gmail.com');      // o'z gmailingiz
+define('SMTP_HOST', 'in-v3.mailjet.com');
+define('SMTP_PORT', 587);
+define('SMTP_USER', '30097bdb6f8e9eff7a84f4479c174d88');
+define('SMTP_PASS', '4b573c924ba07bc983659570a58090c1');
+define('MAIL_FROM', 'karimovu960@gmail.com');
 define('MAIL_NAME', 'UKON Quiz');
 
 function sendOTPEmail(string $toEmail, string $toName, string $otp): bool {

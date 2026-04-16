@@ -52,7 +52,7 @@ if (!$user) {
 }
 
 $otp     = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-$expires = gmdate('Y-m-d H:i:s', strtotime('+10 minutes') + 18000);
+$expires = date('Y-m-d H:i:s', strtotime('+10 minutes'));
 $db->prepare("DELETE FROM otp_codes WHERE email=? AND purpose='register'")->execute([$email]);
 $db->prepare("INSERT INTO otp_codes (email,code,purpose,expires_at) VALUES (?,?,'register',?)")
    ->execute([$email, $otp, $expires]);
