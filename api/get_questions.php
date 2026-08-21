@@ -13,11 +13,10 @@ if (!$subject_slug) {
     exit;
 }
 
-// Fan nomini topish
-$stmt = $db->prepare("SELECT * FROM subjects WHERE LOWER(name) LIKE ? OR id=? LIMIT 1");
-$slug = $subject_slug === 'math' ? '%matematik%' : '%dasturlash%';
-$id   = (int)$subject_slug;
-$stmt->execute([$slug, $id]);
+// Fan nomini topish (faqat ID bo'yicha aniq qidirish)
+$stmt = $db->prepare("SELECT * FROM subjects WHERE id = ? LIMIT 1");
+$id = (int)$subject_slug;
+$stmt->execute([$id]);
 $subject = $stmt->fetch();
 
 if (!$subject) {
@@ -25,13 +24,20 @@ if (!$subject) {
     exit;
 }
 
+// Savollar sonini sozlamalardan olish
+$stmt = $db->prepare("SELECT value FROM settings WHERE key_name='questions_count' LIMIT 1");
+$stmt->execute();
+$row = $stmt->fetch();
+$limit = $row ? (int)$row['value'] : 10;
+if ($limit <= 0) { $limit = 10; }
+
 // Savollarni olish
 $stmt = $db->prepare("
     SELECT id, question, opt_a, opt_b, opt_c, opt_d, correct_ans 
     FROM questions 
     WHERE subject_id = ? 
     ORDER BY RAND() 
-    LIMIT 10
+    LIMIT $limit
 ");
 $stmt->execute([$subject['id']]);
 $questions = $stmt->fetchAll();
