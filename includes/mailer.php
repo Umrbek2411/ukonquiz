@@ -4,14 +4,14 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Mailjet SMTP sozlamalari
-define('SMTP_HOST', 'in-v3.mailjet.com');
-define('SMTP_PORT', 587);
-define('SMTP_USER', '30097bdb6f8e9eff7a84f4479c174d88');
-define('SMTP_PASS', '4b573c924ba07bc983659570a58090c1');
+// SMTP sozlamalari
+define('SMTP_HOST', getenv('SMTP_HOST') ?: 'in-v3.mailjet.com');
+define('SMTP_PORT', (int)(getenv('SMTP_PORT') ?: 587));
+define('SMTP_USER', getenv('SMTP_USER') ?: '');
+define('SMTP_PASS', getenv('SMTP_PASS') ?: '');
 
-define('MAIL_FROM', 'karimovu960@gmail.com');
-define('MAIL_NAME', 'UKON Quiz');
+define('MAIL_FROM', getenv('MAIL_FROM') ?: 'noreply@ukonquiz.com');
+define('MAIL_NAME', getenv('MAIL_NAME') ?: 'UKON Quiz');
 
 /**
  * OTP kodni emailga yuborish
