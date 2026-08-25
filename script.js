@@ -1,4 +1,4 @@
-const API = 'http://localhost/ukonquiz/api';
+const API = '/api';
 
 const TOTAL_TIME = 300;
 

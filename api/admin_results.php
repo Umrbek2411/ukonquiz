@@ -25,7 +25,7 @@ if ($action === 'list') {
             qr.taken_at
         FROM quiz_results qr
         JOIN users u ON u.id = qr.user_id
-        JOIN subjects s ON s.name = qr.subject OR s.id = qr.user_id
+        JOIN subjects s ON s.name = qr.subject
         ORDER BY qr.taken_at DESC
         LIMIT 100
     ");
