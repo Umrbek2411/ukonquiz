@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.UkonQuiz" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/bg_dark</item>
+        <item name="android:statusBarColor">@color/bg_dark</item>
+        <item name="colorPrimary">@color/accent_orange</item>
+        <item name="colorAccent">@color/accent_orange</item>
+    </style>
+</resources>

@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">UKON Quiz</string>
+    <string name="site_url">https://ukonquiz-app.azurewebsites.net/index.html</string>
+    <string name="no_internet">Internet aloqasi yo\'q. Iltimos, tarmoqni tekshiring.</string>
+</resources>
